@@ -11,7 +11,8 @@ const initialiseDbAndServer = async () => {
     db = await open({
       filename: dbPath,
       driver: sqlite3.Database,
-    });
+    );
+    }   
     app.listen(3000, () => {
       console.log("Server Running at http://localhost:3000/");
     });
@@ -20,12 +21,13 @@ const initialiseDbAndServer = async () => {
     process.exit(1);
   }
 };
+initialiseDbAndServer();
 //API - 1
 const convertDbObjectToResponseObject = (dbObject) => {
   return {
     playerId: dbObject.playerId,
     playerName: dbObject.playerName,
-    jerseyNumber: dbObject.jerseyNumber,
+    jerseyNumber: dbObject.jersey_number,
     role: dbObject.role,
   };
 };
@@ -49,7 +51,7 @@ app.post("/players/", async (request, response) => {
   const addPlayerQuery = `
     INSERT
     INTO
-    cricket_team (playerName,jerseyNumber,role)
+    cricket_team (playerName,jersey_number,role)
     VALUES(
         '${playerName}',
         ${jerseyNumber},
@@ -61,7 +63,7 @@ app.post("/players/", async (request, response) => {
 });
 //API-3
 app.get("/players/:playerId/", async (request, response) => {
-  const player_id = request.params;
+  const {playerId} = request.params;
   const getPlayerQuery = `
     SELECT
     *
@@ -69,14 +71,13 @@ app.get("/players/:playerId/", async (request, response) => {
     cricket_team
     WHERE
     player_id = ${playerId};`;
-  const player = await db.run(getPlayerQuery);
-  response.send(player);
+  const player = await db.get(getPlayerQuery);
+  response.send(convertDbObjectToResponseObject(player));
 });
 //API-4
 app.put("/players/:playerId/", async (request, response) => {
   const { playerId } = request.params;
-  const playerDetails = request.body;
-  const { playerName, jerseyNumber, role } = playerDetails;
+  const { playerName, jerseyNumber, role } = request.body;
   const addPlayerQuery = `
     UPDATE
     cricket_team
@@ -103,4 +104,4 @@ app.delete("/players/:playerId/", async (request, response) => {
   response.send("Player Removed");
 });
 
-module.exports = app;
+module.exports = app.js;
